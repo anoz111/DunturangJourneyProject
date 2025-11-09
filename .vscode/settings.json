@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "229f-pptomtomtomtom-frog_rush.sln"
+    "dotnet.defaultSolution": "229f-pptomtomtomtom-frog_rush.slnx"
 }
