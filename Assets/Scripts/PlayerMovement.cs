@@ -1,7 +1,6 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -23,12 +22,17 @@ public class PlayerMovement : MonoBehaviour
 
     float jumpCooldownTimer = 0f;
 
+    // --- Checkpoint System ---
+    Vector2 respawnPoint;
+
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
 
-        
+        // จุดเกิดเริ่มต้น
+        respawnPoint = transform.position;
+
         UpdateScoreDisplay();
         UpdateHPBar();
     }
@@ -40,57 +44,66 @@ public class PlayerMovement : MonoBehaviour
         if (jumpCooldownTimer > 0f)
             jumpCooldownTimer -= Time.deltaTime;
 
-        
         if (Input.GetButtonDown("Jump") && jumpCooldownTimer <= 0f)
         {
             rb2d.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            jumpCooldownTimer = jumpCooldown; 
-            Debug.Log("Jump Leaw Ja!!");
+            jumpCooldownTimer = jumpCooldown;
         }
     }
 
     void FixedUpdate()
     {
-        rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
+        rb2d.velocity = new Vector2(moveInput.x * speed, rb2d.velocity.y);
     }
 
+    // --- Health & Death ---
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
-        Debug.Log("Player hit! HP: " + currentHP);
-
         UpdateHPBar();
 
         if (currentHP <= 0)
         {
             if (deathEffect != null)
                 Instantiate(deathEffect, transform.position, Quaternion.identity);
-            Debug.Log("Player Died!");
-            Destroy(gameObject);
-            SceneManager.LoadScene("GameOver");
+
+            Debug.Log("Player Died! Respawning...");
+
+            Respawn();
         }
     }
 
+    void Respawn()
+    {
+        transform.position = respawnPoint; // Checkpoint ล่าสุด
+        currentHP = maxHP;
+        UpdateHPBar();
+        rb2d.velocity = Vector2.zero;
+    }
+
+    // --- Checkpoint ---
+    public void SetCheckpoint(Vector2 newCheckpoint)
+    {
+        respawnPoint = newCheckpoint;
+        Debug.Log("Checkpoint set at: " + respawnPoint);
+    }
+
+    // --- Score ---
     public void AddScore(int amount)
     {
         score += amount;
-        Debug.Log("Score: " + score);
         UpdateScoreDisplay();
     }
 
     void UpdateScoreDisplay()
     {
         if (scoreText != null)
-        {
             scoreText.text = "Score: " + score;
-        }
     }
 
     void UpdateHPBar()
     {
         if (hpSlider != null)
-        {
             hpSlider.value = (float)currentHP / maxHP;
-        }
-    }     
+    }
 }
