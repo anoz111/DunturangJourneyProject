@@ -7,6 +7,10 @@ public class Player : MonoBehaviour
     Rigidbody2D rb2d;
     Vector2 moveInput;
 
+    [SerializeField] int level = 1;
+    [SerializeField] int currentExp = 0;
+    [SerializeField] int expToNextLevel = 5; // ต้องการ EXP เท่าไหร่ถึงจะเลเวลอัพ 1 ครั้ง
+
     [SerializeField] float speed = 5f;
     [SerializeField] float jumpForce = 10f;
     [SerializeField] float jumpCooldown = 0.5f;
@@ -15,9 +19,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] GameObject deathEffect;
 
-    [SerializeField] TextMeshProUGUI scoreText; // แสดงจำนวนเหรียญในซีนแรก
-    int score = 0;
-
+    [SerializeField] TextMeshProUGUI scoreText; // แสดงจำนวนเหรียญ
     [SerializeField] Slider hpSlider;
 
     float jumpCooldownTimer = 0f;
@@ -30,11 +32,7 @@ public class Player : MonoBehaviour
         rb2d = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
 
-        // จุดเกิดเริ่มต้น
         respawnPoint = transform.position;
-
-        // โหลดเหรียญรวมจาก GameData มาใช้เป็นค่าตั้งต้นในซีนนี้
-        score = GameData.Coins;
 
         UpdateScoreDisplay();
         UpdateHPBar();
@@ -56,7 +54,6 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        // ถ้าโปรเจกต์คุณใช้ velocity ปกติ ก็เปลี่ยนเป็น rb2d.velocity ได้
         rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
     }
 
@@ -71,36 +68,28 @@ public class Player : MonoBehaviour
             if (deathEffect != null)
                 Instantiate(deathEffect, transform.position, Quaternion.identity);
 
-            Debug.Log("Player Died! Respawning...");
-
             Respawn();
         }
     }
 
     void Respawn()
     {
-        transform.position = respawnPoint; // Checkpoint ล่าสุด
+        transform.position = respawnPoint;
         currentHP = maxHP;
         UpdateHPBar();
         rb2d.linearVelocity = Vector2.zero;
     }
 
-    // --- Checkpoint ---
     public void SetCheckpoint(Vector2 newCheckpoint)
     {
         respawnPoint = newCheckpoint;
         Debug.Log("Checkpoint set at: " + respawnPoint);
     }
 
-    // --- Score / Coins ---
+    // --- Coins / Score ---
+    // ตอนนี้ใช้สำหรับ "อัปเดต UI" อย่างเดียว ไม่ได้เพิ่มเหรียญแล้ว
     public void AddScore(int amount)
     {
-        // เพิ่มเหรียญในตัวเก็บกลาง
-        GameData.Coins += amount;
-
-        // sync ค่าใน Player ให้ตรงกับเหรียญรวม
-        score = GameData.Coins;
-
         UpdateScoreDisplay();
     }
 
@@ -108,7 +97,12 @@ public class Player : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = "Coin: " + GameData.Coins;
+            int coinsToShow = 0;
+
+            if (GameManager.Instance != null)
+                coinsToShow = GameManager.Instance.Coins;
+
+            scoreText.text = "Coin: " + coinsToShow;
         }
     }
 
@@ -116,5 +110,22 @@ public class Player : MonoBehaviour
     {
         if (hpSlider != null)
             hpSlider.value = (float)currentHP / maxHP;
+    }
+
+    public void AddExp(int amount)
+    {
+        currentExp += amount;
+        Debug.Log("EXP + " + amount + " => " + currentExp + "/" + expToNextLevel);
+
+        // เช็คเลเวลอัพ
+        while (currentExp >= expToNextLevel)
+        {
+            currentExp -= expToNextLevel;
+            level++;
+            Debug.Log("LEVEL UP! Level ตอนนี้ = " + level);
+
+            // จะเพิ่มค่า expToNextLevel ตามเลเวลก็ได้ เช่น
+            // expToNextLevel += 5;
+        }
     }
 }

@@ -1,34 +1,34 @@
 ﻿using UnityEngine;
 
-// ⭐️ ไฟล์: Coin.cs
 // ⭐️ ลากสคริปต์นี้ไปใส่ "Prefab" ของเหรียญ
 public class Coin : MonoBehaviour
 {
     [SerializeField] int coinValue = 1;
-    [SerializeField] private GameObject pickupEffect; // (ทางเลือก) เอฟเฟกต์ตอนเก็บ
+    [SerializeField] private GameObject pickupEffect; // เอฟเฟกต์ตอนเก็บ (ถ้ามี)
 
-    // เราจะใช้ Is Trigger บน Collider 2D ของเหรียญ
     void OnTriggerEnter2D(Collider2D other)
     {
-        // 1. เช็คว่าชน "Player" หรือไม่
         if (!other.CompareTag("Player"))
             return;
 
-        // 2. ดึงสคริปต์ Player
+        // เพิ่มเหรียญเข้า GameManager (ใช้ข้ามซีน)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddCoins(coinValue);
+        }
+
+        // อัปเดต UI ฝั่ง Player (ให้มันไปอ่านค่าใน GameManager อีกที)
         Player player = other.GetComponent<Player>();
         if (player != null)
         {
-            // ให้ Player เป็นคนจัดการเพิ่มเหรียญ + อัปเดต UI + Sync ข้ามซีน
-            player.AddScore(coinValue);
+            player.AddScore(coinValue); // ตอนนี้จะใช้เพื่ออัปเดต UI อย่างเดียว
         }
 
-        // (ทางเลือก) แสดงเอฟเฟกต์
         if (pickupEffect != null)
         {
             Instantiate(pickupEffect, transform.position, Quaternion.identity);
         }
 
-        // 4. ทำลายเหรียญทิ้ง
         Destroy(gameObject);
     }
 }
