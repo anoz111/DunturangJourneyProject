@@ -14610,7 +14610,7 @@ GameObject:
   - component: {fileID: 613765947}
   - component: {fileID: 613765948}
   m_Layer: 0
-  m_Name: CurrencyManager
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14643,7 +14643,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 623c7e0cd1b240a418d6d541fa839153, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingCoins: 0
 --- !u!1 &614837797
 GameObject:
   m_ObjectHideFlags: 0
