@@ -45,7 +45,7 @@ public class Projectiles2D : MonoBehaviour
             Vector2 projectileVelocity = CalculateProjectileVelocity(shootPoint.position, mouseWorldPos, 1f);
 
             Rigidbody2D shootBullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
-            shootBullet.velocity = projectileVelocity;
+            shootBullet.linearVelocity = projectileVelocity;
 
             // รีเซ็ตคูลดาวน์
             shootCooldownTimer = shootCooldown;

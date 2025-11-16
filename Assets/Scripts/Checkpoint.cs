@@ -6,7 +6,7 @@ public class Checkpoint : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            var player = other.GetComponent<PlayerMovement>();
+            var player = other.GetComponent<Player>();
             if (player != null)
             {
                 player.SetCheckpoint(transform.position);
