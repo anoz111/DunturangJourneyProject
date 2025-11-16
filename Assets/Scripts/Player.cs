@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
@@ -15,7 +15,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] GameObject deathEffect;
 
-    [SerializeField] TextMeshProUGUI scoreText;
+    [SerializeField] TextMeshProUGUI scoreText; // แสดงจำนวนเหรียญในซีนแรก
     int score = 0;
 
     [SerializeField] Slider hpSlider;
@@ -30,8 +30,11 @@ public class Player : MonoBehaviour
         rb2d = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
 
-        // �ش�Դ�������
+        // จุดเกิดเริ่มต้น
         respawnPoint = transform.position;
+
+        // โหลดเหรียญรวมจาก GameData มาใช้เป็นค่าตั้งต้นในซีนนี้
+        score = GameData.Coins;
 
         UpdateScoreDisplay();
         UpdateHPBar();
@@ -53,6 +56,7 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
+        // ถ้าโปรเจกต์คุณใช้ velocity ปกติ ก็เปลี่ยนเป็น rb2d.velocity ได้
         rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
     }
 
@@ -75,7 +79,7 @@ public class Player : MonoBehaviour
 
     void Respawn()
     {
-        transform.position = respawnPoint; // Checkpoint ����ش
+        transform.position = respawnPoint; // Checkpoint ล่าสุด
         currentHP = maxHP;
         UpdateHPBar();
         rb2d.linearVelocity = Vector2.zero;
@@ -88,17 +92,24 @@ public class Player : MonoBehaviour
         Debug.Log("Checkpoint set at: " + respawnPoint);
     }
 
-    // --- Score ---
+    // --- Score / Coins ---
     public void AddScore(int amount)
     {
-        score += amount;
+        // เพิ่มเหรียญในตัวเก็บกลาง
+        GameData.Coins += amount;
+
+        // sync ค่าใน Player ให้ตรงกับเหรียญรวม
+        score = GameData.Coins;
+
         UpdateScoreDisplay();
     }
 
     void UpdateScoreDisplay()
     {
         if (scoreText != null)
-            scoreText.text = "Coin: " + score;
+        {
+            scoreText.text = "Coin: " + GameData.Coins;
+        }
     }
 
     void UpdateHPBar()

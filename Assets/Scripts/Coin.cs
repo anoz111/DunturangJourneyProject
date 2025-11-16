@@ -11,24 +11,24 @@ public class Coin : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         // 1. เช็คว่าชน "Player" หรือไม่
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player"))
+            return;
+
+        // 2. ดึงสคริปต์ Player
+        Player player = other.GetComponent<Player>();
+        if (player != null)
         {
-            // 2. ดึงสคริปต์ Player (ตามชื่อคลาสที่คุณใช้)
-            Player player = other.GetComponent<Player>();
-            if (player != null)
-            {
-                // 3. เรียกฟังก์ชัน AddScore (ที่เราเตรียมไว้ใน Player.cs)
-                player.AddScore(coinValue);
-
-                // (ทางเลือก) แสดงเอฟเฟกต์
-                if (pickupEffect != null)
-                {
-                    Instantiate(pickupEffect, transform.position, Quaternion.identity);
-                }
-
-                // 4. ทำลายเหรียญทิ้ง
-                Destroy(gameObject);
-            }
+            // ให้ Player เป็นคนจัดการเพิ่มเหรียญ + อัปเดต UI + Sync ข้ามซีน
+            player.AddScore(coinValue);
         }
+
+        // (ทางเลือก) แสดงเอฟเฟกต์
+        if (pickupEffect != null)
+        {
+            Instantiate(pickupEffect, transform.position, Quaternion.identity);
+        }
+
+        // 4. ทำลายเหรียญทิ้ง
+        Destroy(gameObject);
     }
 }
