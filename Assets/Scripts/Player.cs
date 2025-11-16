@@ -98,7 +98,7 @@ public class Player : MonoBehaviour
     void UpdateScoreDisplay()
     {
         if (scoreText != null)
-            scoreText.text = "Score: " + score;
+            scoreText.text = "Coin: " + score;
     }
 
     void UpdateHPBar()
