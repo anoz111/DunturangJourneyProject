@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] int level = 1;
     [SerializeField] int currentExp = 0;
-    [SerializeField] int expToNextLevel = 5; // ต้องการ EXP เท่าไหร่ถึงจะเลเวลอัพ 1 ครั้ง
+    [SerializeField] int expToNextLevel = 5;
 
     [SerializeField] float speed = 5f;
     [SerializeField] float jumpForce = 10f;
@@ -19,12 +19,11 @@ public class Player : MonoBehaviour
 
     [SerializeField] GameObject deathEffect;
 
-    [SerializeField] TextMeshProUGUI scoreText; // แสดงจำนวนเหรียญ
+    [SerializeField] TextMeshProUGUI scoreText;
     [SerializeField] Slider hpSlider;
 
     float jumpCooldownTimer = 0f;
 
-    // --- Checkpoint System ---
     Vector2 respawnPoint;
 
     void Start()
@@ -57,7 +56,6 @@ public class Player : MonoBehaviour
         rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
     }
 
-    // --- Health & Death ---
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
@@ -86,8 +84,6 @@ public class Player : MonoBehaviour
         Debug.Log("Checkpoint set at: " + respawnPoint);
     }
 
-    // --- Coins / Score ---
-    // ตอนนี้ใช้สำหรับ "อัปเดต UI" อย่างเดียว ไม่ได้เพิ่มเหรียญแล้ว
     public void AddScore(int amount)
     {
         UpdateScoreDisplay();
@@ -117,15 +113,12 @@ public class Player : MonoBehaviour
         currentExp += amount;
         Debug.Log("EXP + " + amount + " => " + currentExp + "/" + expToNextLevel);
 
-        // เช็คเลเวลอัพ
         while (currentExp >= expToNextLevel)
         {
             currentExp -= expToNextLevel;
             level++;
             Debug.Log("LEVEL UP! Level ตอนนี้ = " + level);
 
-            // จะเพิ่มค่า expToNextLevel ตามเลเวลก็ได้ เช่น
-            // expToNextLevel += 5;
         }
     }
 }

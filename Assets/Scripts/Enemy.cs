@@ -6,7 +6,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] float jumpForce = 8f;
     [SerializeField] float jumpInterval = 2f;
     [SerializeField] int maxHP = 1;
-    [SerializeField] int levelReward = 1;   // ฆ่ากบได้จะเพิ่มเลเวลเท่าไหร่
+    [SerializeField] int levelReward = 1;  
 
     int currentHP;
     float jumpTimer;
@@ -44,7 +44,6 @@ public class Enemy : MonoBehaviour
             Player player = other.gameObject.GetComponent<Player>();
             if (player != null)
             {
-                // ลด HP Player และให้ Respawn ถ้า HP หมด
                 player.TakeDamage(1);
             }
         }
@@ -61,7 +60,6 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
-        // ให้เลเวลเมื่อฆ่ากบสำเร็จ
         if (GameManager.Instance != null)
         {
             GameManager.Instance.AddLevel(1);

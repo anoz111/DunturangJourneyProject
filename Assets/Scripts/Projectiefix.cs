@@ -15,39 +15,32 @@ public class Projectiles2D : MonoBehaviour
 
     void Start()
     {
-        // ซ่อนเคอร์เซอร์ปกติ
         Cursor.visible = false;
 
-        // สร้าง Crosshair prefab
         if (crosshairPrefab != null)
             crosshairInstance = Instantiate(crosshairPrefab);
     }
 
     void Update()
     {
-        // อัพเดทตำแหน่ง Crosshair ให้ตามเมาส์
         if (crosshairInstance != null)
         {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             crosshairInstance.transform.position = mousePos;
         }
 
-        // ลดเวลาคูลดาวน์
         if (shootCooldownTimer > 0f)
             shootCooldownTimer -= Time.deltaTime;
 
-        // ยิงกระสุนเมื่อคลิกซ้ายและคูลดาวน์หมด
         if (Input.GetMouseButtonDown(0) && shootCooldownTimer <= 0f)
         {
             Vector2 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-            // คำนวณความเร็วกระสุนแบบโพรเจกไทล์
             Vector2 projectileVelocity = CalculateProjectileVelocity(shootPoint.position, mouseWorldPos, 1f);
 
             Rigidbody2D shootBullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
             shootBullet.linearVelocity = projectileVelocity;
 
-            // รีเซ็ตคูลดาวน์
             shootCooldownTimer = shootCooldown;
         }
     }
