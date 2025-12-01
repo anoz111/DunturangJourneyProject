@@ -4,110 +4,113 @@ using UnityEngine.SceneManagement;
 
 public class ShopManager : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI coinText;
+    [Header("Currency UI")]
+    [SerializeField] TextMeshProUGUI coinText;  // ใช้ซื้อกุญแจ
+    [SerializeField] TextMeshProUGUI gemText;   // ใช้อัปเกรด
 
-    [Header("Key / Unlock Settings")]
-    [SerializeField] private int keyPrice = 10;
-    [SerializeField] private int requiredLevel = 5;
-    [SerializeField] private GameObject lockIcon;
-    [SerializeField] private string nextStageSceneName = "2ndFloor";
+    [Header("Key / Unlock Settings (ใช้ COIN)")]
+    [SerializeField] int keyPrice = 10;
+    [SerializeField] int requiredLevel = 5;
+    [SerializeField] GameObject lockIcon;
+    [SerializeField] string nextStageSceneName = "2ndFloor";
 
-    [Header("Popup ถ้าเลเวล/เหรียญไม่พอ")]
-    [SerializeField] private GameObject notEnoughPopup;          // Panel popup
-    [SerializeField] private TextMeshProUGUI popupMessageText;   // ข้อความใน popup
+    [Header("Popup ไม่พอ")]
+    [SerializeField] GameObject notEnoughPopup;
+    [SerializeField] TextMeshProUGUI popupMessageText;
+
+    [Header("Upgrade Prices (ใช้ GEM)")]
+    [SerializeField] int heartUpgradePrice = 5;
+    [SerializeField] int speedUpgradePrice = 5;
+    [SerializeField] int jumpUpgradePrice = 5;
+
+    [Header("Upgrade Amount")]
+    [SerializeField] int heartQuotaAmount = 1;
+    [SerializeField] float speedBonusAmount = 1f;
+    [SerializeField] float jumpBonusAmount = 2f;
 
     void Start()
     {
-        UpdateCoinText();
-
-        // เผื่อเราลืมปิดใน Inspector
-        if (notEnoughPopup != null)
-            notEnoughPopup.SetActive(false);
+        RefreshCurrencyUI();
+        if (notEnoughPopup != null) notEnoughPopup.SetActive(false);
     }
 
-    void Update()
+    void Update() => RefreshCurrencyUI();
+
+    void RefreshCurrencyUI()
     {
-        UpdateCoinText();
+        if (GameManager.Instance == null) return;
+        if (coinText) coinText.text = "Coin: " + GameManager.Instance.Coins;
+        if (gemText) gemText.text = "Gem: " + GameManager.Instance.Gems;
     }
 
-    void UpdateCoinText()
-    {
-        if (coinText != null)
-        {
-            int coins = 0;
-            if (GameManager.Instance != null)
-                coins = GameManager.Instance.Coins;
-
-            coinText.text = "Coin: " + coins;
-        }
-    }
-
+    // ===== ซื้อกุญแจด้วย COIN =====
     public void BuyKey()
     {
-        if (GameManager.Instance == null)
-        {
-            Debug.LogWarning("GameManager.Instance == null : ยังไม่มี GameManager ในซีนแรก?");
-            ShowPopup("ไม่พบ GameManager\nเช็คซีนแรกว่ามี GameManager หรือยัง");
-            return;
-        }
+        if (GameManager.Instance == null) { ShowPopup("ไม่พบ GameManager"); return; }
 
-        int currentCoins = GameManager.Instance.Coins;
-        int currentLevel = GameManager.Instance.Level;
+        int coins = GameManager.Instance.Coins;
+        int lvl = GameManager.Instance.Level;
 
-        // เช็คเลเวลก่อน
-        if (currentLevel < requiredLevel)
+        if (lvl < requiredLevel)
         {
-            Debug.Log("เลเวลไม่ถึง! ต้องมีเลเวลอย่างน้อย " + requiredLevel);
             ShowPopup($"เลเวลไม่เพียงพอ\nต้องการเลเวลอย่างน้อย {requiredLevel}");
             return;
         }
-
-        // เช็คเหรียญ
-        if (currentCoins < keyPrice)
+        if (coins < keyPrice)
         {
-            Debug.Log("เหรียญไม่พอ ต้องใช้ " + keyPrice + " เหรียญ");
-            ShowPopup($"เหรียญไม่เพียงพอ\nต้องใช้ {keyPrice} เหรียญ");
+            ShowPopup($"เหรียญไม่เพียงพอ\nต้องใช้ {keyPrice} Coin");
             return;
         }
-
-        // หักเหรียญ
-        bool spent = GameManager.Instance.SpendCoins(keyPrice);
-        if (!spent)
+        if (!GameManager.Instance.SpendCoins(keyPrice))
         {
-            Debug.LogWarning("ไม่สามารถหักเหรียญได้");
             ShowPopup("เกิดข้อผิดพลาดในการหักเหรียญ");
             return;
         }
 
-        UpdateCoinText();
-
-        // ปลดล็อกไอคอน
-        if (lockIcon != null)
-            lockIcon.SetActive(false);
-
-        Debug.Log("ซื้อกุญแจสำเร็จ ไปด่านถัดไป: " + nextStageSceneName);
-
+        RefreshCurrencyUI();
+        if (lockIcon) lockIcon.SetActive(false);
         SceneManager.LoadScene(nextStageSceneName);
     }
 
-    // เรียกจากปุ่ม "OK" บน popup
-    public void ClosePopup()
+    // ===== อัปเกรดด้วย GEM =====
+    public void BuyHeartUpgrade()
     {
-        if (notEnoughPopup != null)
-            notEnoughPopup.SetActive(false);
+        if (!TrySpendGem(heartUpgradePrice)) return;
+        GameManager.Instance.AddHeartQuota(heartQuotaAmount);
+        RefreshCurrencyUI();
     }
 
-    void ShowPopup(string message)
+    public void BuySpeedUpgrade()
     {
-        if (popupMessageText != null)
-            popupMessageText.text = message;
-
-        if (notEnoughPopup != null)
-            notEnoughPopup.SetActive(true);
+        if (!TrySpendGem(speedUpgradePrice)) return;
+        GameManager.Instance.AddSpeedBonus(speedBonusAmount);
+        RefreshCurrencyUI();
     }
 
-    public void BackToStage()
+    public void BuyJumpUpgrade()
     {
-        SceneManager.LoadScene("Stage1");
+        if (!TrySpendGem(jumpUpgradePrice)) return;
+        GameManager.Instance.AddJumpBonus(jumpBonusAmount);
+        RefreshCurrencyUI();
     }
+
+    bool TrySpendGem(int price)
+    {
+        if (GameManager.Instance == null) { ShowPopup("ไม่พบ GameManager"); return false; }
+        if (GameManager.Instance.Gems < price)
+        { ShowPopup($"เพชรไม่เพียงพอ\nต้องใช้ {price} Gem"); return false; }
+        if (!GameManager.Instance.SpendGems(price))
+        { ShowPopup("เกิดข้อผิดพลาดในการหักเพชร"); return false; }
+        return true;
+    }
+
+    // ===== Popup =====
+    public void ClosePopup() { if (notEnoughPopup) notEnoughPopup.SetActive(false); }
+    void ShowPopup(string m)
+    {
+        if (popupMessageText) popupMessageText.text = m;
+        if (notEnoughPopup) notEnoughPopup.SetActive(true);
+    }
+
+    public void BackToStage() => SceneManager.LoadScene("Stage1");
 }

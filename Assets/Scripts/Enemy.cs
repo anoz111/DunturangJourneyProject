@@ -62,7 +62,7 @@ public class Enemy : MonoBehaviour
     {
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.AddLevel(1);
+            GameManager.Instance.AddExp(1);
         }
 
         Destroy(gameObject);
