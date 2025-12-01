@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -28,6 +29,10 @@ public class Player : MonoBehaviour
 
     [Header("UI Coin")]
     [SerializeField] TextMeshProUGUI scoreText;
+
+    [Header("Scenes")]
+    [SerializeField] string gameOverSceneName = "GameOver";
+
 
     // Checkpoint
     Vector2 respawnPoint;
@@ -95,6 +100,7 @@ public class Player : MonoBehaviour
             {
                 // หัวใจหมด → Game Over
                 GameOver();
+                SceneManager.LoadScene(gameOverSceneName);
             }
         }
     }

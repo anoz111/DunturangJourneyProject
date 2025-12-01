@@ -10,14 +10,14 @@ public class ShopManager : MonoBehaviour
 
     [Header("Key / Unlock (ใช้ COIN)")]
     [SerializeField] private int keyPrice = 10;
-    [SerializeField] private int requiredLevel = 5;
+    [SerializeField] private int requiredLevel = 3;
     [SerializeField] private GameObject lockIcon;
     [SerializeField] private string nextStageSceneName = "2ndFloor";
 
     [Header("Upgrade Prices (ใช้ GEM)")]
-    [SerializeField] private int heartUpgradePrice = 5;
-    [SerializeField] private int speedUpgradePrice = 5;
-    [SerializeField] private int jumpUpgradePrice  = 5;
+    [SerializeField] private int heartUpgradePrice = 1;
+    [SerializeField] private int speedUpgradePrice = 1;
+    [SerializeField] private int jumpUpgradePrice  = 1;
 
     [Header("Upgrade Amount")]
     [SerializeField] private int   heartQuotaAmount = 1;   // +หัวใจ respawn ต่อครั้ง
@@ -72,7 +72,16 @@ public class ShopManager : MonoBehaviour
         RefreshCurrencyUI();
 
         if (lockIcon != null) lockIcon.SetActive(false);
-        SceneManager.LoadScene(nextStageSceneName);
+        SceneManager.LoadScene("MainStage");
+    }
+
+    void LogState(string tag)
+    {
+        var gm = GameManager.Instance;
+        if (gm == null) { Debug.LogWarning($"[{tag}] GM == null"); return; }
+        Debug.Log($"[{tag}] Coins={gm.Coins}, Gems={gm.Gems}, Level={gm.Level} | " +
+                  $"ReqLevel={requiredLevel}, KeyPrice={keyPrice}, " +
+                  $"Heart={heartUpgradePrice}, Speed={speedUpgradePrice}, Jump={jumpUpgradePrice}");
     }
 
     // =========== อัปเกรด (ใช้ Gem) ===========
@@ -100,6 +109,34 @@ public class ShopManager : MonoBehaviour
     // ช่วยเช็ค/หัก Gem พร้อม popup
     bool TrySpendGem(int price)
     {
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) { ShowPopup(msgGMNotFound); return false; }
+
+            int g = gm.Gems;
+            Debug.Log($"[SHOP] TrySpendGem: Gems={g}, Price={price}");
+
+            // ถ้าเท่ากับราคาต้องผ่าน (ห้ามเขียน <=)
+            if (g < price)
+            {
+                ShowGemNotEnough(price); // ขึ้น popup: เพชรไม่พอ ต้องใช้ {price}
+                return false;
+            }
+
+            // หักเพชรจริง
+            bool spent = gm.SpendGems(price);
+            Debug.Log($"[SHOP] SpendGems({price}) -> {spent}, GemsLeft={gm.Gems}");
+
+            if (!spent)
+            {
+                // ถ้าเจอ false ตอน Gems == price แปลว่า SpendGems เขียนผิด (ใช้ <=)
+                ShowPopup(msgSpendError + "\n(ตรวจ SpendGems ว่าใช้ < ไม่ใช่ <=)");
+                return false;
+            }
+
+            return true;
+        }
+
         if (GameManager.Instance == null) { ShowPopup(msgGMNotFound); return false; }
         if (GameManager.Instance.Gems < price) { ShowGemNotEnough(price); return false; }
         if (!GameManager.Instance.SpendGems(price)) { ShowPopup(msgSpendError); return false; }
@@ -136,6 +173,6 @@ public class ShopManager : MonoBehaviour
     // (ถ้ามีปุ่มกลับไปเล่นด่านเดิม)
     public void BackToStage()
     {
-        SceneManager.LoadScene("Stage1");
+        SceneManager.LoadScene("MainStage");
     }
 }

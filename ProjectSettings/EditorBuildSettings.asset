@@ -6,23 +6,26 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/Porforever/Demo/SampleScene.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: 64213343eef523c468d2e3330b9e1725
+  - enabled: 1
+    path: Assets/Scenes/MainStage.unity
+    guid: 7f053ee0f5d3fb447940554c71698309
   - enabled: 0
     path: Assets/Scenes/Credit.unity
     guid: 779a03e9d7e96c2488ae0bd72c09d2af
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/GameOver.unity
     guid: cee6ae0f59fee7541baa6e49c4a9dc54
   - enabled: 1
     path: Assets/Scenes/ShopScene.unity
     guid: 29bf104af5236da47990b115c1b27507
   - enabled: 1
-    path: Assets/Scenes/2ndFloor.unity
-    guid: 9e21bfbef48c2b44c92535d8108c9ed2
+    path: Assets/Scenes/2ndStage.unity
+    guid: ef8d96243e4ff154ca8a18ffd862739e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 3590b91b4603b465dbb4216d601bff33, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -3,23 +3,35 @@ using TMPro;
 
 public class LevelTextUI : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI levelText;
+    private TextMeshProUGUI tmp;
 
-    void Start()
+    void Awake()
     {
-        UpdateLevelText();
+        tmp = GetComponent<TextMeshProUGUI>();
     }
 
-    void Update()
+    void OnEnable()
     {
-        UpdateLevelText();
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnLevelChanged += Refresh;
+            GameManager.Instance.OnExpChanged += Refresh; // เผื่ออยากรีเฟรชตอน exp เปลี่ยนด้วย
+        }
+        Refresh();
     }
 
-    void UpdateLevelText()
+    void OnDisable()
     {
-        if (GameManager.Instance == null || levelText == null)
-            return;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnLevelChanged -= Refresh;
+            GameManager.Instance.OnExpChanged -= Refresh;
+        }
+    }
 
-        levelText.text = "Level : " + GameManager.Instance.Level;
+    void Refresh()
+    {
+        if (tmp == null || GameManager.Instance == null) return;
+        tmp.text = $"Level : {GameManager.Instance.Level}";
     }
 }

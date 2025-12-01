@@ -6,7 +6,7 @@ public class MainMenu : MonoBehaviour
 {
     public void PlayGame()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("MainStage");
     }
     public void ShowCredit()
     {
@@ -20,4 +20,14 @@ public class MainMenu : MonoBehaviour
     {
         SceneManager.LoadScene("MainMenu");
     }
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreRunSnapshot();
+
+        string lastStage = PlayerPrefs.GetString("LAST_STAGE", "MainStage"); // fallback เป็น MainStage
+        SceneManager.LoadScene(lastStage);
+    }
+
 }

@@ -3905,12 +3905,12 @@ MonoBehaviour:
   coinText: {fileID: 1262793962}
   gemText: {fileID: 1300726560}
   keyPrice: 10
-  requiredLevel: 5
+  requiredLevel: 3
   lockIcon: {fileID: 183725933}
   nextStageSceneName: 2ndFloor
-  heartUpgradePrice: 5
-  speedUpgradePrice: 5
-  jumpUpgradePrice: 5
+  heartUpgradePrice: 1
+  speedUpgradePrice: 1
+  jumpUpgradePrice: 1
   heartQuotaAmount: 1
   speedBonusAmount: 1
   jumpBonusAmount: 2

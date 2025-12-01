@@ -64,7 +64,12 @@ public class Enemy : MonoBehaviour
         {
             GameManager.Instance.AddExp(1);
         }
+        // ใน Enemy/WalkingEnemy ตอน Die()
+        if (GameManager.Instance != null) GameManager.Instance.AddExp(5);
+
 
         Destroy(gameObject);
     }
+
+
 }
