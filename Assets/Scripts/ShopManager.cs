@@ -5,28 +5,35 @@ using UnityEngine.SceneManagement;
 public class ShopManager : MonoBehaviour
 {
     [Header("Currency UI")]
-    [SerializeField] TextMeshProUGUI coinText;  // ใช้ซื้อกุญแจ
-    [SerializeField] TextMeshProUGUI gemText;   // ใช้อัปเกรด
+    [SerializeField] private TextMeshProUGUI coinText;   // แสดงเหรียญ (ซื้อกุญแจ)
+    [SerializeField] private TextMeshProUGUI gemText;    // แสดงเพชร (อัปเกรด)
 
-    [Header("Key / Unlock Settings (ใช้ COIN)")]
-    [SerializeField] int keyPrice = 10;
-    [SerializeField] int requiredLevel = 5;
-    [SerializeField] GameObject lockIcon;
-    [SerializeField] string nextStageSceneName = "2ndFloor";
-
-    [Header("Popup ไม่พอ")]
-    [SerializeField] GameObject notEnoughPopup;
-    [SerializeField] TextMeshProUGUI popupMessageText;
+    [Header("Key / Unlock (ใช้ COIN)")]
+    [SerializeField] private int keyPrice = 10;
+    [SerializeField] private int requiredLevel = 5;
+    [SerializeField] private GameObject lockIcon;
+    [SerializeField] private string nextStageSceneName = "2ndFloor";
 
     [Header("Upgrade Prices (ใช้ GEM)")]
-    [SerializeField] int heartUpgradePrice = 5;
-    [SerializeField] int speedUpgradePrice = 5;
-    [SerializeField] int jumpUpgradePrice = 5;
+    [SerializeField] private int heartUpgradePrice = 5;
+    [SerializeField] private int speedUpgradePrice = 5;
+    [SerializeField] private int jumpUpgradePrice  = 5;
 
     [Header("Upgrade Amount")]
-    [SerializeField] int heartQuotaAmount = 1;
-    [SerializeField] float speedBonusAmount = 1f;
-    [SerializeField] float jumpBonusAmount = 2f;
+    [SerializeField] private int   heartQuotaAmount = 1;   // +หัวใจ respawn ต่อครั้ง
+    [SerializeField] private float speedBonusAmount = 1f;  // +สปีด ต่อครั้ง
+    [SerializeField] private float jumpBonusAmount  = 2f;  // +แรงกระโดด ต่อครั้ง
+
+    [Header("Popup")]
+    [SerializeField] private GameObject notEnoughPopup;          // Panel popup รวม
+    [SerializeField] private TextMeshProUGUI popupMessageText;   // ข้อความใน popup
+
+    [Header("Popup Messages (แก้ได้จาก Inspector)")]
+    [SerializeField] private string msgGMNotFound     = "ไม่พบ GameManager\nเช็คว่ามี GameManager ในซีนแรกหรือยัง";
+    [SerializeField] private string msgLevelNotEnough = "เลเวลไม่เพียงพอ\nต้องการเลเวลอย่างน้อย {0}";
+    [SerializeField] private string msgCoinNotEnough  = "เหรียญไม่เพียงพอ\nต้องใช้ {0} Coin";
+    [SerializeField] private string msgGemNotEnough   = "เพชรไม่เพียงพอ\nต้องใช้ {0} Gem";
+    [SerializeField] private string msgSpendError     = "เกิดข้อผิดพลาดในการหักสกุลเงิน";
 
     void Start()
     {
@@ -36,43 +43,39 @@ public class ShopManager : MonoBehaviour
 
     void Update() => RefreshCurrencyUI();
 
+    // ----------------- UI -----------------
     void RefreshCurrencyUI()
     {
         if (GameManager.Instance == null) return;
-        if (coinText) coinText.text = "Coin: " + GameManager.Instance.Coins;
-        if (gemText) gemText.text = "Gem: " + GameManager.Instance.Gems;
+
+        if (coinText != null)
+            coinText.text = "Coin: " + GameManager.Instance.Coins;
+
+        if (gemText != null)
+            gemText.text  = "Gem: "  + GameManager.Instance.Gems;
     }
 
-    // ===== ซื้อกุญแจด้วย COIN =====
+    // =========== ซื้อกุญแจ (ใช้ Coin) ===========
     public void BuyKey()
     {
-        if (GameManager.Instance == null) { ShowPopup("ไม่พบ GameManager"); return; }
+        if (GameManager.Instance == null) { ShowPopup(msgGMNotFound); return; }
 
         int coins = GameManager.Instance.Coins;
-        int lvl = GameManager.Instance.Level;
+        int lvl   = GameManager.Instance.Level;
 
-        if (lvl < requiredLevel)
-        {
-            ShowPopup($"เลเวลไม่เพียงพอ\nต้องการเลเวลอย่างน้อย {requiredLevel}");
-            return;
-        }
-        if (coins < keyPrice)
-        {
-            ShowPopup($"เหรียญไม่เพียงพอ\nต้องใช้ {keyPrice} Coin");
-            return;
-        }
+        if (lvl < requiredLevel) { ShowLevelNotEnough(requiredLevel); return; }
+        if (coins < keyPrice)    { ShowCoinNotEnough(keyPrice);      return; }
+
         if (!GameManager.Instance.SpendCoins(keyPrice))
-        {
-            ShowPopup("เกิดข้อผิดพลาดในการหักเหรียญ");
-            return;
-        }
+        { ShowPopup(msgSpendError); return; }
 
         RefreshCurrencyUI();
-        if (lockIcon) lockIcon.SetActive(false);
+
+        if (lockIcon != null) lockIcon.SetActive(false);
         SceneManager.LoadScene(nextStageSceneName);
     }
 
-    // ===== อัปเกรดด้วย GEM =====
+    // =========== อัปเกรด (ใช้ Gem) ===========
     public void BuyHeartUpgrade()
     {
         if (!TrySpendGem(heartUpgradePrice)) return;
@@ -94,23 +97,45 @@ public class ShopManager : MonoBehaviour
         RefreshCurrencyUI();
     }
 
+    // ช่วยเช็ค/หัก Gem พร้อม popup
     bool TrySpendGem(int price)
     {
-        if (GameManager.Instance == null) { ShowPopup("ไม่พบ GameManager"); return false; }
-        if (GameManager.Instance.Gems < price)
-        { ShowPopup($"เพชรไม่เพียงพอ\nต้องใช้ {price} Gem"); return false; }
-        if (!GameManager.Instance.SpendGems(price))
-        { ShowPopup("เกิดข้อผิดพลาดในการหักเพชร"); return false; }
+        if (GameManager.Instance == null) { ShowPopup(msgGMNotFound); return false; }
+        if (GameManager.Instance.Gems < price) { ShowGemNotEnough(price); return false; }
+        if (!GameManager.Instance.SpendGems(price)) { ShowPopup(msgSpendError); return false; }
         return true;
     }
 
-    // ===== Popup =====
-    public void ClosePopup() { if (notEnoughPopup) notEnoughPopup.SetActive(false); }
-    void ShowPopup(string m)
+    // ----------------- Popup Helpers -----------------
+    void ShowLevelNotEnough(int needLevel)
     {
-        if (popupMessageText) popupMessageText.text = m;
-        if (notEnoughPopup) notEnoughPopup.SetActive(true);
+        ShowPopup(string.Format(msgLevelNotEnough, needLevel));
     }
 
-    public void BackToStage() => SceneManager.LoadScene("Stage1");
+    void ShowCoinNotEnough(int price)
+    {
+        ShowPopup(string.Format(msgCoinNotEnough, price));
+    }
+
+    void ShowGemNotEnough(int price)
+    {
+        ShowPopup(string.Format(msgGemNotEnough, price));
+    }
+
+    void ShowPopup(string message)
+    {
+        if (popupMessageText != null) popupMessageText.text = message;
+        if (notEnoughPopup    != null) notEnoughPopup.SetActive(true);
+    }
+
+    public void ClosePopup()
+    {
+        if (notEnoughPopup != null) notEnoughPopup.SetActive(false);
+    }
+
+    // (ถ้ามีปุ่มกลับไปเล่นด่านเดิม)
+    public void BackToStage()
+    {
+        SceneManager.LoadScene("Stage1");
+    }
 }
