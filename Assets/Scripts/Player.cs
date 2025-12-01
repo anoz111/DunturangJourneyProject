@@ -7,34 +7,44 @@ public class Player : MonoBehaviour
     Rigidbody2D rb2d;
     Vector2 moveInput;
 
-    [SerializeField] int level = 1;
-    [SerializeField] int currentExp = 0;
-    [SerializeField] int expToNextLevel = 5;
-
+    [Header("Movement")]
     [SerializeField] float speed = 5f;
     [SerializeField] float jumpForce = 10f;
     [SerializeField] float jumpCooldown = 0.5f;
-    [SerializeField] int maxHP = 3;
-    int currentHP;
-
-    [SerializeField] GameObject deathEffect;
-
-    [SerializeField] TextMeshProUGUI scoreText;
-    [SerializeField] Slider hpSlider;
-
     float jumpCooldownTimer = 0f;
 
+    [Header("Health")]
+    [SerializeField] int maxHP = 3;
+    int currentHP;
+    [SerializeField] Slider hpSlider;
+
+    [Header("Lives (หัวใจ)")]
+    [SerializeField] int maxLives = 3;                   // มีหัวใจสูงสุดกี่ดวง (3)
+    int currentLives;                                   // หัวใจที่เหลืออยู่ตอนนี้
+    [SerializeField] TextMeshProUGUI livesText;         // Text "x 3" ข้างรูปหัวใจ
+
+    [Header("Effects")]
+    [SerializeField] GameObject deathEffect;
+
+    [Header("UI Coin")]
+    [SerializeField] TextMeshProUGUI scoreText;
+
+    // Checkpoint
     Vector2 respawnPoint;
 
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
+
+        // ตั้งค่าเริ่มต้น
         currentHP = maxHP;
+        currentLives = maxLives;
 
         respawnPoint = transform.position;
 
-        UpdateScoreDisplay();
         UpdateHPBar();
+        UpdateLivesText();
+        UpdateScoreDisplay();
     }
 
     void Update()
@@ -56,27 +66,90 @@ public class Player : MonoBehaviour
         rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
     }
 
+    // ================= HEALTH & LIVES =================
+
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
+        currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         UpdateHPBar();
 
+        // ถ้า HP หมด = ตาย 1 ครั้ง
         if (currentHP <= 0)
         {
+            // เล่นเอฟเฟกต์ตาย (ถ้ามี)
             if (deathEffect != null)
                 Instantiate(deathEffect, transform.position, Quaternion.identity);
 
-            Respawn();
+            // ใช้หัวใจ 1 ดวง
+            currentLives--;
+            currentLives = Mathf.Clamp(currentLives, 0, maxLives);
+            UpdateLivesText();
+
+            if (currentLives > 0)
+            {
+                // ยังมีหัวใจเหลือ → Respawn ที่ Checkpoint
+                Respawn();
+            }
+            else
+            {
+                // หัวใจหมด → Game Over
+                GameOver();
+            }
+        }
+    }
+
+    public void Heal(int amount)
+    {
+        currentHP += amount;
+        currentHP = Mathf.Clamp(currentHP, 0, maxHP);
+        UpdateHPBar();
+    }
+
+    void UpdateHPBar()
+    {
+        if (hpSlider != null)
+        {
+            hpSlider.value = (float)currentHP / maxHP;
+        }
+    }
+
+    void UpdateLivesText()
+    {
+        if (livesText != null)
+        {
+            livesText.text = "x " + currentLives;
         }
     }
 
     void Respawn()
     {
+        // กลับไปจุด Checkpoint ล่าสุด
         transform.position = respawnPoint;
+
+        // รีเลือดเต็ม
         currentHP = maxHP;
         UpdateHPBar();
+
         rb2d.linearVelocity = Vector2.zero;
     }
+
+    void GameOver()
+    {
+        Debug.Log("GAME OVER: หัวใจหมดแล้ว");
+
+        // เลือกได้หลายแบบ:
+        // 1) ปิดตัวละคร
+        // gameObject.SetActive(false);
+
+        // 2) โหลดซีน Game Over
+        // SceneManager.LoadScene("GameOver");
+
+        // ตอนนี้ขอแค่ปิดตัวละครไปก่อน
+        gameObject.SetActive(false);
+    }
+
+    // ================= CHECKPOINT =================
 
     public void SetCheckpoint(Vector2 newCheckpoint)
     {
@@ -84,8 +157,13 @@ public class Player : MonoBehaviour
         Debug.Log("Checkpoint set at: " + respawnPoint);
     }
 
+    // ================= COIN UI (อิงจาก GameManager) =================
+
     public void AddScore(int amount)
     {
+        if (GameManager.Instance != null)
+            GameManager.Instance.AddCoins(amount);
+
         UpdateScoreDisplay();
     }
 
@@ -99,26 +177,6 @@ public class Player : MonoBehaviour
                 coinsToShow = GameManager.Instance.Coins;
 
             scoreText.text = "Coin: " + coinsToShow;
-        }
-    }
-
-    void UpdateHPBar()
-    {
-        if (hpSlider != null)
-            hpSlider.value = (float)currentHP / maxHP;
-    }
-
-    public void AddExp(int amount)
-    {
-        currentExp += amount;
-        Debug.Log("EXP + " + amount + " => " + currentExp + "/" + expToNextLevel);
-
-        while (currentExp >= expToNextLevel)
-        {
-            currentExp -= expToNextLevel;
-            level++;
-            Debug.Log("LEVEL UP! Level ตอนนี้ = " + level);
-
         }
     }
 }
