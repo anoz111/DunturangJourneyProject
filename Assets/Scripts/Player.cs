@@ -20,9 +20,9 @@ public class Player : MonoBehaviour
     [SerializeField] Slider hpSlider;
 
     [Header("Lives (หัวใจ)")]
-    [SerializeField] int maxLives = 3;                   // มีหัวใจสูงสุดกี่ดวง (3)
-    int currentLives;                                   // หัวใจที่เหลืออยู่ตอนนี้
-    [SerializeField] TextMeshProUGUI livesText;         // Text "x 3" ข้างรูปหัวใจ
+    [SerializeField] int maxLives = 3;                  
+    int currentLives;                                   
+    [SerializeField] TextMeshProUGUI livesText;         
 
     [Header("Effects")]
     [SerializeField] GameObject deathEffect;
@@ -34,14 +34,12 @@ public class Player : MonoBehaviour
     [SerializeField] string gameOverSceneName = "GameOver";
 
 
-    // Checkpoint
     Vector2 respawnPoint;
 
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
 
-        // ตั้งค่าเริ่มต้น
         currentHP = maxHP;
         currentLives = maxLives;
 
@@ -71,34 +69,27 @@ public class Player : MonoBehaviour
         rb2d.linearVelocity = new Vector2(moveInput.x * speed, rb2d.linearVelocity.y);
     }
 
-    // ================= HEALTH & LIVES =================
-
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         UpdateHPBar();
 
-        // ถ้า HP หมด = ตาย 1 ครั้ง
         if (currentHP <= 0)
         {
-            // เล่นเอฟเฟกต์ตาย (ถ้ามี)
             if (deathEffect != null)
                 Instantiate(deathEffect, transform.position, Quaternion.identity);
 
-            // ใช้หัวใจ 1 ดวง
             currentLives--;
             currentLives = Mathf.Clamp(currentLives, 0, maxLives);
             UpdateLivesText();
 
             if (currentLives > 0)
             {
-                // ยังมีหัวใจเหลือ → Respawn ที่ Checkpoint
                 Respawn();
             }
             else
             {
-                // หัวใจหมด → Game Over
                 GameOver();
                 SceneManager.LoadScene(gameOverSceneName);
             }
@@ -130,10 +121,8 @@ public class Player : MonoBehaviour
 
     void Respawn()
     {
-        // กลับไปจุด Checkpoint ล่าสุด
         transform.position = respawnPoint;
 
-        // รีเลือดเต็ม
         currentHP = maxHP;
         UpdateHPBar();
 
@@ -144,27 +133,13 @@ public class Player : MonoBehaviour
     {
         Debug.Log("GAME OVER: หัวใจหมดแล้ว");
 
-        // เลือกได้หลายแบบ:
-        // 1) ปิดตัวละคร
-        // gameObject.SetActive(false);
-
-        // 2) โหลดซีน Game Over
-        // SceneManager.LoadScene("GameOver");
-
-        // ตอนนี้ขอแค่ปิดตัวละครไปก่อน
         gameObject.SetActive(false);
     }
-
-    // ================= CHECKPOINT =================
-
     public void SetCheckpoint(Vector2 newCheckpoint)
     {
         respawnPoint = newCheckpoint;
         Debug.Log("Checkpoint set at: " + respawnPoint);
     }
-
-    // ================= COIN UI (อิงจาก GameManager) =================
-
     public void AddScore(int amount)
     {
         if (GameManager.Instance != null)
@@ -172,7 +147,6 @@ public class Player : MonoBehaviour
 
         UpdateScoreDisplay();
     }
-
     void UpdateScoreDisplay()
     {
         if (scoreText != null)

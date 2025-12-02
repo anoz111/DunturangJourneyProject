@@ -15,7 +15,7 @@ public class LevelTextUI : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnLevelChanged += Refresh;
-            GameManager.Instance.OnExpChanged += Refresh; // เผื่ออยากรีเฟรชตอน exp เปลี่ยนด้วย
+            GameManager.Instance.OnExpChanged += Refresh;
         }
         Refresh();
     }

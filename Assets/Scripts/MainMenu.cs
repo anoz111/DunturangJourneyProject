@@ -26,7 +26,7 @@ public class MainMenu : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreRunSnapshot();
 
-        string lastStage = PlayerPrefs.GetString("LAST_STAGE", "MainStage"); // fallback เป็น MainStage
+        string lastStage = PlayerPrefs.GetString("LAST_STAGE", "MainStage");
         SceneManager.LoadScene(lastStage);
     }
 

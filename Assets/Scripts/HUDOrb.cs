@@ -3,7 +3,7 @@ using TMPro;
 
 public class HUDOrb : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI orbText;   // ลาก TextTMP ที่เขียน "Orb: 0" มาใส่
+    [SerializeField] private TextMeshProUGUI orbText;
 
     void OnEnable()
     {

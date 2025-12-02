@@ -10,7 +10,7 @@ public class ShopManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI orbText;
 
     [Header("Player Level UI")]
-    [SerializeField] private TextMeshProUGUI levelText;   // <<< ใส่ Level : N
+    [SerializeField] private TextMeshProUGUI levelText;
 
     [Header("Key / Unlock (ใช้ COIN)")]
     [SerializeField] private int keyPrice = 10;
@@ -29,7 +29,7 @@ public class ShopManager : MonoBehaviour
     [SerializeField] private float jumpBonusAmount  = 2f;
 
     [Header("Orb Exchange")]
-    [SerializeField] private int coinsPerOrb = 10; // 1 Orb -> 10 Coins
+    [SerializeField] private int coinsPerOrb = 10;
 
     [Header("Popup รวม")]
     [SerializeField] private GameObject notEnoughPopup;
@@ -45,7 +45,6 @@ public class ShopManager : MonoBehaviour
 
     void OnEnable()
     {
-        // สมัคร event เพื่ออัปเดต UI อัตโนมัติเมื่อค่าเงิน/เลเวลเปลี่ยน
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnCurrencyChanged += RefreshCurrencyUI;
@@ -70,7 +69,6 @@ public class ShopManager : MonoBehaviour
         if (notEnoughPopup != null) notEnoughPopup.SetActive(false);
     }
 
-    // ----------------- UI -----------------
     void RefreshCurrencyUI()
     {
         if (GameManager.Instance == null) return;
@@ -86,7 +84,6 @@ public class ShopManager : MonoBehaviour
         levelText.text = "Level: " + GameManager.Instance.Level;
     }
 
-    // =========== ซื้อกุญแจ (ใช้ Coin) ===========
     public void BuyKey()
     {
         if (GameManager.Instance == null) { ShowPopup(msgGMNotFound); return; }
@@ -108,7 +105,6 @@ public class ShopManager : MonoBehaviour
         SceneManager.LoadScene(nextStageSceneName);
     }
 
-    // =========== อัปเกรด (ใช้ Gem) ===========
     public void BuyHeartUpgrade()
     {
         if (!TrySpendGem(heartUpgradePrice)) return;
@@ -138,7 +134,6 @@ public class ShopManager : MonoBehaviour
         return true;
     }
 
-    // =========== แลก ORB ===========
     public void ConvertOrbToGem()
     {
         if (GameManager.Instance == null) { ShowPopup(msgGMNotFound); return; }
@@ -155,7 +150,6 @@ public class ShopManager : MonoBehaviour
         RefreshCurrencyUI();
     }
 
-    // =========== Popup ===========
     void ShowPopup(string message)
     {
         if (popupMessageText) popupMessageText.text = message;
@@ -167,7 +161,6 @@ public class ShopManager : MonoBehaviour
         if (notEnoughPopup) notEnoughPopup.SetActive(false);
     }
 
-    // =========== กลับไปเล่นด่าน ===========
     public void BackToStage()
     {
         SceneManager.LoadScene("MainStage");

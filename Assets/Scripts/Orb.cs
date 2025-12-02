@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class Orb : MonoBehaviour
 {
-    [SerializeField] int amount = 1;                 // เก็บได้กี่ลูกต่อครั้ง (ส่วนใหญ่ 1)
-    [SerializeField] GameObject pickupEffect;        // (ทางเลือก) เอฟเฟกต์ตอนเก็บ
-    [SerializeField] AudioClip pickupSfx;            // (ทางเลือก) เสียงตอนเก็บ
-    [SerializeField] float destroyDelay = 0f;        // ดีเลย์ก่อนลบวัตถุ (0 = ทันที)
+    [SerializeField] int amount = 1;               
+    [SerializeField] GameObject pickupEffect;        
+    [SerializeField] AudioClip pickupSfx;            
+    [SerializeField] float destroyDelay = 0f;        
 
     void OnTriggerEnter2D(Collider2D other)
     {

@@ -3,7 +3,7 @@ using TMPro;
 
 public class HUDGem : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI gemText; // ใส่ TextTMP ที่เขียนว่า "Gem: 0"
+    [SerializeField] private TextMeshProUGUI gemText;
 
     void OnEnable()
     {

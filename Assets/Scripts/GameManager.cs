@@ -7,30 +7,24 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    // ===== เงิน 3 สกุล =====
-    public int Coins { get; private set; } = 0;   // ใช้ซื้อกุญแจ
-    public int Gems  { get; private set; } = 0;   // ใช้อัปเกรด
-    public int Orbs  { get; private set; } = 0;   // ใช้แลก Coin/Gem
+    public int Coins { get; private set; } = 0;   
+    public int Gems  { get; private set; } = 0;   
+    public int Orbs  { get; private set; } = 0;  
 
-    // ===== LEVEL & EXP =====
     public int Level { get; private set; } = 1;
     public int CurrentExp { get; private set; } = 0;
     public int ExpToNext  { get; private set; } = 10;
 
-    // ===== อัปเกรดสถานะ (พกข้ามซีน) =====
     public int   ExtraHeartQuota { get; private set; } = 0;
     public float SpeedBonus      { get; private set; } = 0f;
     public float JumpBonus       { get; private set; } = 0f;
 
-    // ===== ป้องกันซื้อกุญแจซ้ำ =====
     public bool KeyUnlocked { get; private set; } = false;
 
-    // ===== อีเวนต์ UI =====
     public event Action OnCurrencyChanged;
     public event Action OnExpChanged;
     public event Action OnLevelChanged;
 
-    // ===== Snapshot รอบด่าน =====
     private bool hasSnapshot = false;
     private int  snapCoins, snapGems, snapOrbs, snapLevel, snapCurrentExp;
 
@@ -51,7 +45,6 @@ public class GameManager : MonoBehaviour
             SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // ---------- EXP ----------
     int GetExpNeededForLevel(int level) => 10 + 5 * (level - 1);
 
     public void AddExp(int amount)
@@ -83,7 +76,6 @@ public class GameManager : MonoBehaviour
             AddExp(ExpToNext - CurrentExp);
     }
 
-    // ---------- Coins ----------
     public void AddCoins(int amount)
     {
         Coins += Mathf.Max(0, amount);
@@ -101,7 +93,6 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    // ---------- Gems ----------
     public void AddGems(int amount)
     {
         Gems += Mathf.Max(0, amount);
@@ -119,7 +110,6 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    // ---------- Orbs ----------
     public void AddOrbs(int amount)
     {
         Orbs += Mathf.Max(0, amount);
@@ -137,28 +127,22 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    // แลก 1 Orb -> 1 Gem
     public bool ConvertOrbToGem()
     {
         if (!SpendOrbs(1)) return false;
         AddGems(1);
         return true;
     }
-
-    // แลก 1 Orb -> 10 Coins
     public bool ConvertOrbToCoins(int coinPerOrb = 10)
     {
         if (!SpendOrbs(1)) return false;
         AddCoins(coinPerOrb);
         return true;
     }
-
-    // ---------- Upgrades ----------
     public void AddHeartQuota(int amount)  { ExtraHeartQuota += amount; Debug.Log("[GM] ExtraHeartQuota = " + ExtraHeartQuota); }
     public void AddSpeedBonus(float amount){ SpeedBonus += amount;      Debug.Log("[GM] SpeedBonus = " + SpeedBonus); }
     public void AddJumpBonus(float amount) { JumpBonus += amount;       Debug.Log("[GM] JumpBonus = " + JumpBonus); }
 
-    // ---------- Key Unlock ----------
     public void UnlockKey()
     {
         KeyUnlocked = true;
@@ -171,7 +155,6 @@ public class GameManager : MonoBehaviour
         KeyUnlocked = PlayerPrefs.GetInt("KEY_UNLOCKED", 0) == 1;
     }
 
-    // ---------- Snapshot ----------
     public void SaveRunSnapshot()
     {
         snapCoins      = Coins;
@@ -204,7 +187,7 @@ public class GameManager : MonoBehaviour
 
     public void ClearRunSnapshot() => hasSnapshot = false;
 
-    // ---------- Scene hooks ----------
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         bool isPlayableStage = scene.name == "MainStage" || scene.name == "2ndStage";

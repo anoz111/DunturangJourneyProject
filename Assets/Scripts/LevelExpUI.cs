@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class LevelExpUI : MonoBehaviour
 {
-    [SerializeField] private Slider expSlider;            // Slider EXP (min 0, max 1)
-    [SerializeField] private TextMeshProUGUI levelText;   // "Level : X"
-    [SerializeField] private TextMeshProUGUI expText;     // "A / B" (ถ้าอยากโชว์ตัวเลข)
+    [SerializeField] private Slider expSlider;           
+    [SerializeField] private TextMeshProUGUI levelText;  
+    [SerializeField] private TextMeshProUGUI expText;    
 
     void OnEnable()
     {
@@ -38,7 +38,7 @@ public class LevelExpUI : MonoBehaviour
         {
             expSlider.minValue = 0f;
             expSlider.maxValue = 1f;
-            expSlider.wholeNumbers = false; // สำคัญห้ามติ๊ก Whole Numbers
+            expSlider.wholeNumbers = false; 
             expSlider.value = GameManager.Instance.ExpProgress01;
         }
 
