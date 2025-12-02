@@ -1,33 +1,38 @@
-using UnityEngine;
 using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[DefaultExecutionOrder(-100)] // ให้ GameManager ตื่นก่อนตัวอื่น ลดปัญหา null
+[DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    // ===== เงิน 2 สกุล =====
+    // ===== เงิน 3 สกุล =====
     public int Coins { get; private set; } = 0;   // ใช้ซื้อกุญแจ
-    public int Gems { get; private set; } = 0;   // ใช้อัปเกรด
+    public int Gems  { get; private set; } = 0;   // ใช้อัปเกรด
+    public int Orbs  { get; private set; } = 0;   // ใช้แลก Coin/Gem
 
     // ===== LEVEL & EXP =====
-    public int Level { get; private set; } = 1;        // เลเวลปัจจุบัน
-    public int CurrentExp { get; private set; } = 0;   // EXP ที่มีในเลเวลนี้
-    public int ExpToNext { get; private set; } = 10;  // EXP ที่ต้องใช้เพื่ออัปเลเวล
+    public int Level { get; private set; } = 1;
+    public int CurrentExp { get; private set; } = 0;
+    public int ExpToNext  { get; private set; } = 10;
 
-    // แจ้งเตือน UI ให้รีเฟรช
+    // ===== อัปเกรดสถานะ (พกข้ามซีน) =====
+    public int   ExtraHeartQuota { get; private set; } = 0;
+    public float SpeedBonus      { get; private set; } = 0f;
+    public float JumpBonus       { get; private set; } = 0f;
+
+    // ===== ป้องกันซื้อกุญแจซ้ำ =====
+    public bool KeyUnlocked { get; private set; } = false;
+
+    // ===== อีเวนต์ UI =====
+    public event Action OnCurrencyChanged;
     public event Action OnExpChanged;
     public event Action OnLevelChanged;
 
-    // ===== ค่าสเตตัสอัปเกรด (พกข้ามซีนได้) =====
-    public int ExtraHeartQuota { get; private set; } = 0;
-    public float SpeedBonus { get; private set; } = 0f;
-    public float JumpBonus { get; private set; } = 0f;
-
-    // ===== Snapshot ของรอบด่านนี้ (ใช้สำหรับ Retry) =====
+    // ===== Snapshot รอบด่าน =====
     private bool hasSnapshot = false;
-    private int snapCoins, snapGems, snapLevel, snapCurrentExp;
+    private int  snapCoins, snapGems, snapOrbs, snapLevel, snapCurrentExp;
 
     void Awake()
     {
@@ -36,26 +41,26 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        // กำหนด EXP ที่ต้องใช้ครั้งแรกตามสูตร
         ExpToNext = GetExpNeededForLevel(Level);
+        LoadPersistentFlags();
     }
 
-    // ---------- สูตร EXP ต่อเลเวล (ปรับได้) ----------
-    int GetExpNeededForLevel(int level)
+    void OnDestroy()
     {
-        // ตัวอย่าง: เริ่ม 10 เพิ่ม +5 ต่อเลเวล: 10, 15, 20, ...
-        return 10 + 5 * (level - 1);
-        // โตแบบยกกำลัง (ตัวเลือก): return Mathf.RoundToInt(10 * Mathf.Pow(1.25f, level - 1));
+        if (Instance == this)
+            SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // ---------- EXP API ----------
+    // ---------- EXP ----------
+    int GetExpNeededForLevel(int level) => 10 + 5 * (level - 1);
+
     public void AddExp(int amount)
     {
         if (amount <= 0) return;
 
         CurrentExp += amount;
-
         bool leveled = false;
+
         while (CurrentExp >= ExpToNext)
         {
             CurrentExp -= ExpToNext;
@@ -67,112 +72,153 @@ public class GameManager : MonoBehaviour
         OnExpChanged?.Invoke();
         if (leveled) OnLevelChanged?.Invoke();
 
-        Debug.Log($"EXP: {CurrentExp}/{ExpToNext} | Level: {Level}");
+        Debug.Log($"[GM] EXP {CurrentExp}/{ExpToNext} | Lv {Level}");
     }
 
-    // สะดวกใช้กับ Slider (0..1)
     public float ExpProgress01 => ExpToNext <= 0 ? 1f : (float)CurrentExp / ExpToNext;
+
+    public void AddLevel(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+            AddExp(ExpToNext - CurrentExp);
+    }
 
     // ---------- Coins ----------
     public void AddCoins(int amount)
     {
-        Coins += amount;
-        Debug.Log("Coins total: " + Coins);
+        Coins += Mathf.Max(0, amount);
+        Debug.Log("[GM] Coins total: " + Coins);
+        OnCurrencyChanged?.Invoke();
     }
 
     public bool SpendCoins(int amount)
     {
+        if (amount <= 0) return true;
         if (Coins < amount) return false;
         Coins -= amount;
-        Debug.Log("Coins left: " + Coins);
+        Debug.Log("[GM] Coins left: " + Coins);
+        OnCurrencyChanged?.Invoke();
         return true;
     }
 
     // ---------- Gems ----------
     public void AddGems(int amount)
     {
-        Gems += amount;
-        Debug.Log("Gems total: " + Gems);
+        Gems += Mathf.Max(0, amount);
+        Debug.Log("[GM] Gems total: " + Gems);
+        OnCurrencyChanged?.Invoke();
     }
 
     public bool SpendGems(int amount)
     {
+        if (amount <= 0) return true;
         if (Gems < amount) return false;
         Gems -= amount;
-        Debug.Log("Gems left: " + Gems);
+        Debug.Log("[GM] Gems left: " + Gems);
+        OnCurrencyChanged?.Invoke();
         return true;
     }
 
-    // ---------- อัปเกรดค่าสเตตัส ----------
-    public void AddHeartQuota(int amount) { ExtraHeartQuota += amount; }
-    public void AddSpeedBonus(float amount) { SpeedBonus += amount; }
-    public void AddJumpBonus(float amount) { JumpBonus += amount; }
-
-    // เผื่อโค้ดเก่าที่เรียก AddLevel (ตีความว่าเลเวลอัปทันที)
-    public void AddLevel(int amount)
+    // ---------- Orbs ----------
+    public void AddOrbs(int amount)
     {
-        for (int i = 0; i < amount; i++)
-        {
-            // เติม EXP ให้พอดีเพื่อเลเวลอัป 1 ครั้ง
-            AddExp(ExpToNext - CurrentExp);
-        }
+        Orbs += Mathf.Max(0, amount);
+        Debug.Log("[GM] Orbs total: " + Orbs);
+        OnCurrencyChanged?.Invoke();
     }
 
-    // ====== SNAPSHOT API ======
-    // เรียกตอน "เข้าเล่นด่าน" เพื่อจำค่าก่อนเริ่มรอบนั้น
+    public bool SpendOrbs(int amount)
+    {
+        if (amount <= 0) return true;
+        if (Orbs < amount) return false;
+        Orbs -= amount;
+        Debug.Log("[GM] Orbs left: " + Orbs);
+        OnCurrencyChanged?.Invoke();
+        return true;
+    }
+
+    // แลก 1 Orb -> 1 Gem
+    public bool ConvertOrbToGem()
+    {
+        if (!SpendOrbs(1)) return false;
+        AddGems(1);
+        return true;
+    }
+
+    // แลก 1 Orb -> 10 Coins
+    public bool ConvertOrbToCoins(int coinPerOrb = 10)
+    {
+        if (!SpendOrbs(1)) return false;
+        AddCoins(coinPerOrb);
+        return true;
+    }
+
+    // ---------- Upgrades ----------
+    public void AddHeartQuota(int amount)  { ExtraHeartQuota += amount; Debug.Log("[GM] ExtraHeartQuota = " + ExtraHeartQuota); }
+    public void AddSpeedBonus(float amount){ SpeedBonus += amount;      Debug.Log("[GM] SpeedBonus = " + SpeedBonus); }
+    public void AddJumpBonus(float amount) { JumpBonus += amount;       Debug.Log("[GM] JumpBonus = " + JumpBonus); }
+
+    // ---------- Key Unlock ----------
+    public void UnlockKey()
+    {
+        KeyUnlocked = true;
+        PlayerPrefs.SetInt("KEY_UNLOCKED", 1);
+        PlayerPrefs.Save();
+        Debug.Log("[GM] Key unlocked");
+    }
+    void LoadPersistentFlags()
+    {
+        KeyUnlocked = PlayerPrefs.GetInt("KEY_UNLOCKED", 0) == 1;
+    }
+
+    // ---------- Snapshot ----------
     public void SaveRunSnapshot()
     {
-        snapCoins = Coins;
-        snapGems = Gems;
-        snapLevel = Level;
+        snapCoins      = Coins;
+        snapGems       = Gems;
+        snapOrbs       = Orbs;
+        snapLevel      = Level;
         snapCurrentExp = CurrentExp;
-        hasSnapshot = true;
+        hasSnapshot    = true;
 
-        Debug.Log($"[GM] Snapshot saved: coins={snapCoins}, gems={snapGems}, lvl={snapLevel}, exp={snapCurrentExp}");
+        Debug.Log($"[GM] Snapshot saved: coin={snapCoins}, gem={snapGems}, orb={snapOrbs}, lv={snapLevel}, exp={snapCurrentExp}");
     }
 
-    // เรียกตอน "ตาย/Retry" เพื่อย้อนค่ากลับก่อนเริ่มด่าน
     public void RestoreRunSnapshot()
     {
         if (!hasSnapshot) return;
 
-        Coins = snapCoins;
-        Gems = snapGems;
-        Level = snapLevel;
+        Coins      = snapCoins;
+        Gems       = snapGems;
+        Orbs       = snapOrbs;
+        Level      = snapLevel;
         CurrentExp = snapCurrentExp;
-        ExpToNext = GetExpNeededForLevel(Level);
+        ExpToNext  = GetExpNeededForLevel(Level);
 
+        OnCurrencyChanged?.Invoke();
         OnExpChanged?.Invoke();
         OnLevelChanged?.Invoke();
 
-        Debug.Log($"[GM] Snapshot restored: coins={Coins}, gems={Gems}, lvl={Level}, exp={CurrentExp}");
+        Debug.Log($"[GM] Restored: coin={Coins}, gem={Gems}, orb={Orbs}, lv={Level}, exp={CurrentExp}");
     }
 
-    private void OnDestroy()
-    {
-        if (Instance == this)
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
+    public void ClearRunSnapshot() => hasSnapshot = false;
+
+    // ---------- Scene hooks ----------
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // เซ็ตว่า "ซีนนี้เป็นด่านเล่นจริงไหม"
         bool isPlayableStage = scene.name == "MainStage" || scene.name == "2ndStage";
-
         if (isPlayableStage)
         {
-            // บันทึกชื่อด่านล่าสุดสำหรับปุ่ม Restart
             PlayerPrefs.SetString("LAST_STAGE", scene.name);
             PlayerPrefs.Save();
 
-            // เซฟสแน็ปช็อตก่อนเริ่มรอบด่าน (ของที่เก็บในรอบนี้จะย้อนคืนได้ถ้าตาย)
             SaveRunSnapshot();
             Debug.Log($"[GM] Stage loaded -> snapshot saved for {scene.name}");
         }
         else
         {
-            // ไม่ทำอะไรเป็นพิเศษกับ ShopScene / MainMenu / GameOver
             Debug.Log($"[GM] Non-playable scene loaded: {scene.name}");
         }
     }
-
 }
