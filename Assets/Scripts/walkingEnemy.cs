@@ -1,16 +1,16 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class WalkingEnemy : MonoBehaviour
 {
-    [Header("Move")]
+    [Header("Move A <-> B")]
     [SerializeField] float moveSpeed = 2f;
     [SerializeField] Transform pointA;
     [SerializeField] Transform pointB;
     [SerializeField] float arriveThreshold = 0.1f;
     [SerializeField] float waitAtEnd = 0f;
 
-    [Header("HP")]
+    [Header("HP / Reward")]
     [SerializeField] int maxHP = 1;
     [SerializeField] int expReward = 1;
 
@@ -21,6 +21,11 @@ public class WalkingEnemy : MonoBehaviour
 
     Vector2 posA, posB;
 
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        rb.freezeRotation = true;
+    }
 
     void Start()
     {
@@ -29,24 +34,18 @@ public class WalkingEnemy : MonoBehaviour
         if (!pointA || !pointB)
         {
             Debug.LogWarning($"{name}: pointA/pointB ยังไม่ได้เซ็ต");
-            enabled = false;
-            return;
+            enabled = false; return;
         }
 
         posA = pointA.position;
         posB = pointB.position;
 
-        float dA = Vector2.Distance(transform.position, posA);
-        float dB = Vector2.Distance(transform.position, posB);
+        float dA = Mathf.Abs(transform.position.x - posA.x);
+        float dB = Mathf.Abs(transform.position.x - posB.x);
         movingToB = dB >= dA;
     }
 
     void FixedUpdate()
-    {
-        Patrol();
-    }
-
-    void Patrol()
     {
         if (waitTimer > 0f)
         {
@@ -55,29 +54,33 @@ public class WalkingEnemy : MonoBehaviour
             return;
         }
 
-        Vector2 target = movingToB ? posB : posA;
-        float dx = target.x - transform.position.x;
+        float targetX = movingToB ? posB.x : posA.x;
 
-        if (Mathf.Abs(dx) <= arriveThreshold)
+        float step = moveSpeed * Time.fixedDeltaTime;
+        float prevX = rb.position.x;
+        float newX = Mathf.MoveTowards(prevX, targetX, step);
+
+        if (Mathf.Abs(newX - targetX) <= arriveThreshold)
         {
+            newX = targetX;
             movingToB = !movingToB;
             if (waitAtEnd > 0f) waitTimer = waitAtEnd;
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            return;
         }
 
+        Vector2 newPos = new Vector2(newX, rb.position.y);
+        rb.MovePosition(newPos);
+
+        float vx = (newX - prevX) / Time.fixedDeltaTime;
+        rb.linearVelocity = new Vector2(vx, rb.linearVelocity.y);
     }
+
     void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag("Player"))
-        {
-            Player player = other.gameObject.GetComponent<Player>();
-            if (player != null)
-            {
-                player.TakeDamage(1);
-            }
-        }
+        if (!other.collider.CompareTag("Player")) return;
+        var player = other.collider.GetComponent<Player>() ?? other.collider.GetComponentInParent<Player>();
+        if (player != null) player.TakeDamage(1);
     }
+
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
@@ -86,16 +89,7 @@ public class WalkingEnemy : MonoBehaviour
 
     void Die()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.AddExp(expReward);
-
+        if (GameManager.Instance != null) GameManager.Instance.AddExp(expReward);
         Destroy(gameObject);
-    }
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        if (pointA) Gizmos.DrawWireSphere(pointA.position, 0.08f);
-        if (pointB) Gizmos.DrawWireSphere(pointB.position, 0.08f);
-        if (pointA && pointB) Gizmos.DrawLine(pointA.position, pointB.position);
     }
 }

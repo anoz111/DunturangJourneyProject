@@ -76,6 +76,7 @@ GameObject:
   - component: {fileID: 8149842266388794487}
   - component: {fileID: 4783707824636201709}
   - component: {fileID: 9041846831055298085}
+  - component: {fileID: 7294305904640351803}
   m_Layer: 0
   m_Name: WalkingEnemy
   m_TagString: Enemy
@@ -146,7 +147,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_Sprite: {fileID: 8596640243658272642, guid: 5d4daff38e3d9174b873918abcf2c1d4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 1
+  m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -194,8 +195,6 @@ MonoBehaviour:
   pointB: {fileID: 0}
   arriveThreshold: 0.1
   waitAtEnd: 0
-  gfx: {fileID: 0}
-  facesRightByDefault: 1
   maxHP: 1
   expReward: 1
 --- !u!50 &4783707824636201709
@@ -261,3 +260,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &7294305904640351803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5965836305381613088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 020ea5c4b52c20f4388d01da0544750c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteRenderer: {fileID: 0}
+  defaultFacingRight: 1
+  flipThreshold: 0.01
